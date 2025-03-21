@@ -13,12 +13,4 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/users")
 public class BaseUserController {
 
-    private final BaseUserService userService;
-
-
-    @PostMapping("/join")
-    public String createNewUser(@RequestBody BaseUserDto userDto) {
-        userService.createNewUser(userDto);
-        return "ok";
-    }
 }

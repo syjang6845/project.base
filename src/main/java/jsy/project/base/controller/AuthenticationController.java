@@ -17,7 +17,7 @@ public class AuthenticationController {
     private final BaseUserService userService;
 
 
-    @PostMapping("/join")
+    @PostMapping("/signin")
     public String createNewUser(@RequestBody BaseUserDto userDto) {
         userService.createNewUser(userDto);
         return "ok";
