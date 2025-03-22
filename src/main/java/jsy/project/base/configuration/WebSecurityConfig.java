@@ -1,8 +1,7 @@
 package jsy.project.base.configuration;
 
-import jsy.project.base.entity.support.BaseUserRole;
-import jsy.project.base.filter.AuthenticationFilter;
-import jsy.project.base.filter.JwtAuthenticationFilter;
+import jsy.project.base.configuration.filter.AuthenticationFilter;
+import jsy.project.base.configuration.filter.JwtAuthenticationFilter;
 import jsy.project.base.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

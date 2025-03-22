@@ -1,10 +1,14 @@
 package jsy.project.base.jwt;
 
 import io.jsonwebtoken.*;
+import jsy.project.base.dto.request.BaseUserDto;
 import jsy.project.base.entity.support.BaseUserRole;
+import jsy.project.base.service.BaseUserService;
+import jsy.project.base.service.RedisJwtService;
 import jsy.project.base.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,16 +23,37 @@ public class TokenTest {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private RedisJwtService redisJwtService;
+
+    @Autowired
+    BaseUserService baseUserService;
+
+    @BeforeEach
+    void beforeSaveUser() {
+        BaseUserDto baseUserDto = new BaseUserDto();
+        baseUserDto.setUsername("user");
+        baseUserDto.setPassword("password");
+        baseUserDto.setType(BaseUserRole.USER);
+
+        baseUserService.createNewUser(baseUserDto);
+    }
+
 
     @Test
-    @DisplayName("JWT access Token 발급")
+    @DisplayName("JWT access Token 발급 후 레디스 저장")
     void accessTokenSuccess() {
-        String jwt = jwtUtil.createAccessToken("user", "USER");
+        Date currentDate = new Date(System.currentTimeMillis());
+        String jwt = jwtUtil.createAccessTokenWithTime("user", "USER", currentDate.getTime());
 
         Assertions.assertThat(jwt).isNotNull();
 
+        Claims claims = jwtUtil.validateToken(jwt);
+
         Assertions.assertThat(jwtUtil.getUsername(jwt)).isEqualTo("user");
         Assertions.assertThat(jwtUtil.getRole(jwt)).isEqualTo(BaseUserRole.USER.name());
+//        Assertions.assertThat(claims.getExpiration()).isEqualTo(new Date(currentDate.getTime() + 60 * 60 * 1000L));
+        Assertions.assertThat(claims.getIssuedAt()).isEqualTo(roundOffMillis(currentDate));
     }
 
     @Test
@@ -36,8 +61,13 @@ public class TokenTest {
     void refreshTokenSuccess() {
         String jwt = jwtUtil.createAccessToken("user", "USER");
 
+        redisJwtService.saveToken("refresh_token user", jwt);
+
         Assertions.assertThat(jwt).isNotNull();
 
+        String refreshTokenUser = redisJwtService.getValue("refresh_token user");
+
+        Assertions.assertThat(refreshTokenUser).isEqualTo(jwt);
         Assertions.assertThat(jwtUtil.getUsername(jwt)).isEqualTo("user");
         Assertions.assertThat(jwtUtil.getRole(jwt)).isEqualTo(BaseUserRole.USER.name());
     }
